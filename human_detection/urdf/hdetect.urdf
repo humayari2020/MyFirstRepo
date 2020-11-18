@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<robot name="hdetect">
+
+  <material name="blue">
+    <color rgba="0 0 0.8 1"/>
+  </material>
+  <material name="black">
+    <color rgba="0 0 0 1"/>
+  </material>
+  <material name="white">
+    <color rgba="1 1 1 1"/>
+  </material>
+
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="1.5 -2.0 0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <cylinder length="0.75450" radius="0.23"/>
+      </geometry>
+
+    </visual>
+    <inertial>
+      <origin xyz="1.5 -2.0 0" rpy="0.0 0.0 0.0"/>
+      <mass value="1.0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <collision>
+      <origin xyz="1.5 -2.0 0.0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <cylinder length="0.75450" radius="0.23"/>
+      </geometry>
+
+    </collision>
+
+  </link>
+  <link name="on_top">
+    <visual>
+      <origin  xyz="0 -2.0 0.33" rpy="0.0 0.0 0.0"/>
+      <geometry>
+      <cylinder length="0.08154" radius="0.15"/>
+      </geometry>
+      <material name="blue"/>
+    </visual>
+    <inertial>
+       <origin  xyz="0 -2.0 0.33" rpy="0.0 0.0 0.0"/>
+      <mass value="1.0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
+    </inertial>
+    <collision>
+       <origin  xyz="0 -2.0 0.33" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <cylinder length="0.08154" radius="0.15"/>
+      </geometry>
+      <material name="blue"/>
+    </collision>
+
+  </link>
+
+  <joint name="on_top_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="on_top"/>
+    <origin xyz="1.5 0 0.08154"/>
+  </joint>
+
+  <link name="camera_link">
+   <collision>
+     <origin xyz="0 -2.0 0.1" rpy="0 0 0"/>
+     <geometry>
+   <box size="0.05 0.05 0.05"/>
+     </geometry>
+     <material name="blue"/>
+   </collision>
+
+   <visual>
+     <origin xyz="0 -2.0 0.1" rpy="0 0 0"/>
+     <geometry>
+   <box size="0.05 0.05 0.05"/>
+     </geometry>
+     <material name="blue"/>
+   </visual>
+
+   <inertial>
+     <mass value="1e-5" />
+     <origin xyz="0 -2.0 0.1" rpy="0 0 0"/>
+     <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+   </inertial>
+ </link>
+
+ <joint name="camera_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0 0.29" rpy="0 0 0"/>
+    <parent link="on_top"/>
+    <child link="camera_link"/>
+  </joint>
+
+  <!-- generate an optical frame http://www.ros.org/reps/rep-0103.html#suffix-frames
+      so that ros and opencv can operate on the camera frame correctly -->
+  <joint name="camera_optical_joint" type="fixed">
+    <!-- these values have to be these values otherwise the gazebo camera image
+        won't be aligned properly with the frame it is supposedly originating from -->
+    <origin xyz="2 0 0" rpy="-1.5707 0 -1.5707"/>
+    <parent link="camera_link"/>
+    <child link="camera_link_optical"/>
+  </joint>
+
+  <link name="camera_link_optical">
+  </link>
+
+
+
+
+ <gazebo reference="camera_link">
+    <sensor type="multicamera" name="stereo_camera">
+      <update_rate>30.0</update_rate>
+      <camera name="left">
+	<pose>0 0 0.33 0 0 0</pose>
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>800</width>
+          <height>800</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+           <near>0.02</near>
+           <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <camera name="right">
+        <pose>0 0 0.33 0 0 0.33</pose>
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>800</width>
+          <height>800</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin name="stereo_camera_controller" filename="libgazebo_ros_multicamera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>multisense_sl/camera</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>left_camera_optical_frame</frameName>
+
+
+        <!--<rightFrameName>right_camera_optical_frame</rightFrameName>-->
+        <hackBaseline>0.447</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+</robot>
